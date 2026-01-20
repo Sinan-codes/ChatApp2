@@ -41,14 +41,14 @@ class ConversationListCreateView(generics.ListCreateAPIView):
                 status = status.HTTP_403_FORBIDDEN
             )
 
-        users = User.object.filter(id__in=participants_data)
+        users = User.objects.filter(id__in=participants_data)
         if users.count() != 2:
             return Response(
                 {'error': "A conversation needs exactly two participants"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        existing_conversation = Conversations.objects.filter(
+        existing_conversation = Conversation.objects.filter(
             participants__id=participants_data[0]
         ).filter(
             participants__id=participants_data[1]

@@ -10,9 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password')
 
 
-        def create(self, validated_data):
-            user = User.objects.create_user(**validated_data)
-            return user
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username = validated_data["username"],
+            password = validated_data["password"]
+        )
+        return user
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,9 +28,9 @@ class ConversationSerializer(serializers.ModelSerializer):
         model = Conversation
         fields = ('id', 'participants', 'created_at')
 
-        def to_representation(self, instance):
-            representation = super().to_representation(instance)
-            return representation
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        return representation
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserListSerializer()
@@ -36,14 +39,14 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ('id', 'conversation', 'sender', 'content', 'timestamp', 'participants')
 
-        def get_participants(self, obj):
-            return UserListSerializer(obj.conversation.participants.all(), many=True).data
+    def get_participants(self, obj):
+        return UserListSerializer(obj.conversation.participants.all(), many=True).data
 
 class CreateMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = ('conversation', 'content')
 
-        def create(self, validated_data):
-            message = Message.object.create(**validated_data)
-            return message
+    def create(self, validated_data):
+        message = Message.object.create(**validated_data)
+        return message

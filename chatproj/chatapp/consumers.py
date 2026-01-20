@@ -9,7 +9,6 @@ from urllib.parse import parse_qs
 class ChatConsumer(AsyncWebsocketConsumer):
     
     async def connect(self):
-        User = self.get_user_model()
         query_string = self.scope['query_string'].decode('utf-8')
         params = parse_qs(query_string)
         token = params.get('token', [None])[0]
@@ -95,24 +94,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
         elif event_type == 'typing':
             try:
                 user_data = await self.get_user_data(self.scope['user'])
-                receiver_id = text_data_json.get('receiver_id')
+                receiver_id = text_data_json.get('receiver')
 
                 if reveiver_id is not None:
                     if isinstance(receiver_id, (str, int, float)):
                         receiver_id = int(receiver_id)
 
                         if receiver_id != self.scope["user"].id:
-                            print(f"{user_id['username']} is typing for Receiver: {receiver_id} ")
+                            print(f"{user_data['username']} is typing for Receiver: {receiver_id} ")
                             await self.channel_layer.group_send(
                                 self.room_group_name,
                                 {
                                     'type': 'typing',
                                     'online_user': user_data,
-                                    'receiver_id': receiver_id,
+                                    'receiver': receiver_id,
                                 }
                             )
                         else:
-                            print(f"{user_id['username']} is typing for themselves")
+                            print(f"User is typing for themselves")
 
                     else :
                         print(f"Invalid receiver ID: {type(receiver_id)}")
@@ -155,12 +154,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def online_status(self, event):
         await self.send(text_data=json.dumps(event))
 
-    @sync_to_async
-    def get_user_model(self):
-        from django.contrib.auth import get_user_model
+    
 
     @sync_to_async
     def get_user(self, user_id):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         return User.object.get(id=user_id)
 
     @sync_to_async
@@ -179,12 +178,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @sync_to_async
     def save_message(self, conversation, user, content):
         from .models import Message
-        message = Message.object.create(
+        Message.object.create(
             conversation=conversation,
             sender=user,
             content=content,
         )
-        return message
+
+    # @sync_to_async
+    # def get_user_model(self):
+    #     from django.contrib.auth import get_user_model
 
 
 
